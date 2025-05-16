@@ -1,37 +1,50 @@
-const STORAGE_KEY = 'feedback-form-state';
-let formData = {
-  email: "",
-  message: ""
-};
+import iziToast from 'izitoast';
+import 'izitoast/dist/css/iziToast.min.css';
 
-const form = document.querySelector('.feedback-form');
-const emailInput = form.elements.email;
-const messageTextarea = form.elements.message;
+const form = document.querySelector('.form');
 
-const savedData = localStorage.getItem(STORAGE_KEY);
-if (savedData) {
-  formData = JSON.parse(savedData);
-  emailInput.value = formData.email || '';
-  messageTextarea.value = formData.message || '';
+function getIziToastOptions({ message, color }) {
+  return ({
+    message,
+    messageColor: 'white',
+    position: 'topRight',
+    timeout: 3000,
+    color,
+    progressBar: false,
+  });
 }
 
-form.addEventListener('input', (event) => {
-  const { name, value } = event.target;
-  formData[name] = value.trim()
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(formData));
-});
+function createPromise(delay, state) {
+  return new Promise((resolve, reject) => {
+    setTimeout(() => {
+      if (state === 'fulfilled') {
+        resolve(delay);
+      } else {
+        reject(delay);
+      }
+    }, delay);
+  });
+}
 
-form.addEventListener('submit', (event) => {
+form.addEventListener('submit', event => {
   event.preventDefault();
 
-  if (!formData.email || !formData.message) {
-    alert('Fill please all fields');
-    return;
-  }
+  const delay = Number(form.elements.delay.value);
+  const state = form.elements.state.value;
 
-  console.log(formData);
+  createPromise(delay, state)
+    .then(delay => {
+      iziToast.show(getIziToastOptions({
+        message: `<i class="fa-solid fa-check"></i> Fulfilled promise in ${delay}ms`,
+        color: '#008000',
+      }));
+    })
+    .catch(delay => {
+      iziToast.show(getIziToastOptions({
+        message: `<i class="fa-solid fa-circle-exclamation"></i> Rejected promise in ${delay}ms`,
+        color: '#FF0000',
+      }));
+    });
 
-  localStorage.removeItem(STORAGE_KEY);
-  formData = { email: "", message: "" };
   form.reset();
 });
